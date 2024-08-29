@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<h:html xmlns:h="http://xmlns.jcp.org/jsf/html"
+        xmlns:f="http://xmlns.jcp.org/jsf/core"
+        xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>Zona Fit (GYM)</title>
+        <link rel="stylesheet" href="https://unpkg.com/primeflex@latest/primeflex.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background-color: #19193d;
+                margin: 0;
+                padding: 0;
+            }
+            .header {
+                background-color: #85a0f7;
+                padding: 1rem;
+                text-align: center;
+                font-size: 2rem;
+                font-weight: bold;
+                color: #ffffff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+            .content {
+                padding: 2rem;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            .card {
+                background-color: #141c30;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                padding: 1rem;
+                margin-bottom: 2rem;
+            }
+            .footer {
+                background-color: #2e2c47;
+                padding: 1rem;
+                text-align: center;
+                font-size: 1rem;
+                color: #fff;
+                position: fixed;
+                width: 100%;
+                bottom: 0;
+                box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .button-primary {
+                background-color: #007bff;
+                color: #fff;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                display: inline-block;
+                margin-right: 0.5rem;
+            }
+            .button-primary:hover {
+                background-color: #0056b3;
+            }
+            .button-danger {
+                background-color: #dc3545;
+                color: #fff;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                display: inline-block;
+            }
+            .button-danger:hover {
+                background-color: #c82333;
+            }
+        </style>
+    </h:head>
+    <h:body>
+        <div class="header">
+            Zona Fit (GYM)
+        </div>
+        <div class="content">
+            <h:form id="forma-clientes">
+                <p:growl id="mensajes" showDetails="true"/>
+                <!-- Menubar -->
+                <div class="card">
+                    <p:menubar>
+                        <p:menuitem value="Inicio" icon="pi pi-fw pi-home"
+                                    update=":forma-clientes:clientes-tabla"
+                                    actionListener="#{indexControlador.cargarDatos}"/>
+                        <p:menuitem value="Nuevo Cliente" icon="pi pi-fw pi-user-plus"
+                                    actionListener="#{indexControlador.agregarCliente}"
+                                    update=":forma-modal:cliente-ventana"
+                                    oncomplete="PF('ventanaModalCliente').show()"/>
+                    </p:menubar>
+                </div>
+                <!-- Campo de búsqueda -->
+                <div class="card">
+                    <p:inputText id="busqueda" value="#{indexControlador.criterioBusqueda}" 
+                                 placeholder="Buscar..." 
+                                 style="width: 100%; margin-bottom: 10px;">
+                        <p:ajax event="keyup" update="clientes-tabla" 
+                                listener="#{indexControlador.buscarClientes}"/>
+                    </p:inputText>
+                </div>
+                <!-- DataTable -->
+                <div class="card">
+                    <p:dataTable value="#{indexControlador.clientesFiltrados}" var="cliente"
+                            id="clientes-tabla" widgetVar="clientesTabla" 
+                            paginator="true" rows="10" responsiveLayout="scroll">
+                        <f:facet name="header">
+                            <div class="flex justify-content-center flex-wrap card-container yellow-container">
+                                <div class="flex align-items-center justify-content-center w-20rem h-4rem bg-yellow-500 font-bold text-gray-900 border-round m-2">
+                                    <h3>Clientes</h3>
+                                </div>
+                            </div>
+                        </f:facet>
+
+                        <p:column headerText="Id" sortBy="#{cliente.id}">
+                            <h:outputText value="#{cliente.id}"/>
+                        </p:column>
+
+                        <p:column headerText="Nombre" sortBy="#{cliente.nombre}">
+                            <h:outputText value="#{cliente.nombre}"/>
+                        </p:column>
+
+                        <p:column headerText="Apellido" sortBy="#{cliente.apellido}">
+                            <h:outputText value="#{cliente.apellido}"/>
+                        </p:column>
+
+                        <p:column headerText="Membresía" sortBy="#{cliente.membresia}">
+                            <h:outputText value="#{cliente.membresia}"/>
+                        </p:column>
+
+                        <p:column headerText="Acciones">
+                            <p:commandButton value="Editar" icon="pi pi-pencil"
+                                             update=":forma-modal:cliente-ventana"
+                                             process="@this"
+                                             oncomplete="PF('ventanaModalCliente').show()"
+                                             class="button-primary">
+                                <f:setPropertyActionListener
+                                    value="#{cliente}"
+                                    target="#{indexControlador.clienteSeleccionado}"/>
+                                <p:resetInput target=":forma-modal:cliente-ventana"/>
+                            </p:commandButton>
+
+                            <p:commandButton value="Eliminar" class="button-danger"
+                                             icon="pi pi-trash"
+                                             process="@this"
+                                             oncomplete="PF('eliminarClienteVentana').show()">
+                                <f:setPropertyActionListener
+                                    value="#{cliente}"
+                                    target="#{indexControlador.clienteSeleccionado}"/>
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </div>
+            </h:form>
+            <h:form id="forma-modal">
+                <p:dialog header="Detalles Cliente" showEffect="fade"
+                          modal="true" widgetVar="ventanaModalCliente"
+                          responsive="true">
+                    <p:outputPanel id="cliente-ventana" class="ui-fluid">
+                        <div class="field">
+                            <p:outputLabel for="nombre">Nombre</p:outputLabel>
+                            <p:inputText id="nombre"
+                                         value="#{indexControlador.clienteSeleccionado.nombre}"
+                                         required="true"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="apellido">Apellido</p:outputLabel>
+                            <p:inputText id="apellido"
+                                         value="#{indexControlador.clienteSeleccionado.apellido}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="membresia">Membresía</p:outputLabel>
+                            <p:inputNumber id="membresia"
+                                           value="#{indexControlador.clienteSeleccionado.membresia}"
+                                            required="true"/>
+                        </div>
+                    </p:outputPanel>
+                    <f:facet name="footer">
+                        <p:commandButton value="Guardar" icon="pi pi-check"
+                                         process="cliente-ventana @this"
+                                         actionListener="#{indexControlador.guardarCliente}"/>
+                        <p:commandButton value="Cancelar" icon="pi pi-times"
+                                         onclick="PF('ventanaModalCliente').hide()"
+                                         class="ui-button-secondary" type="button"/>
+                    </f:facet>
+                </p:dialog>
+                <p:confirmDialog widgetVar="eliminarClienteVentana"
+                                 showEffect="fade" width="300"
+                                 message="¿Eliminar el cliente?"
+                                 header="Confirmar" severity="warn">
+                    <p:commandButton value="Sí" icon="pi pi-check"
+                                     process="@this"
+                                     actionListener="#{indexControlador.eliminarCliente}"
+                                     oncomplete="PF('eliminarClienteVentana').hide()"/>
+                    <p:commandButton value="No" type="button"
+                                     styleClass="ui-button-secondary"
+                                     icon="pi pi-times"
+                                     onclick="PF('eliminarClienteVentana').hide()"/>
+                </p:confirmDialog>
+            </h:form>
+        </div>
+        <div class="footer">
+            2023 Zona Fit. Todos los derechos reservados.
+        </div>
+    </h:body>
+</h:html>
